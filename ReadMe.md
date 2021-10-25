@@ -21,6 +21,7 @@ Solution for Kotlin koans
 > Check out the function syntax and change the code to make the function start return the string "OK" 
 > In the Kotlin Koans tasks, the function TODO() will throw an exception. To complete Kotlin Koans, you need to replace this function invocation with meaningful code according to the problem.
 
+- #### Solution
 ```Kotlin
     fun start(): String = "OK"
 ```
@@ -41,6 +42,7 @@ fun joinToString(
 
 > It can be called on a collection of Strings.
 
+- #### Solution
 ```Kotlin
     fun joinOptions(options: Collection<String>) = options.joinToString(separator=", ", prefix="[", postfix="]")
 ```
@@ -66,6 +68,7 @@ public String foo(String name) {
 
 > You can replace all these Java overloads with one function in Kotlin. Change the declaration of the foo function in a way that makes the code using foo compile. Use default and named arguments.
 
+- #### Solution
 ```Kotlin
 fun foo(name: String, number: Int = 42, toUpperCase: Boolean = false) =
         (if (toUpperCase) name.uppercase() else name) + number
@@ -84,6 +87,7 @@ fun useFoo() = listOf(
 You can use the handy library functions trimIndent and trimMargin to format multiline triple-quoted strings in accordance with the surrounding code.
 Replace the trimIndent call with the trimMargin call taking # as the prefix value so that the resulting string doesn't contain the prefix character.
 
+- #### Solution
 ```Kotlin
 const val question = "life, the universe, and everything"
 const val answer = 42
@@ -108,6 +112,7 @@ fun getPattern() = """\d{2}\.\d{2}\.\d{4}"""
 
 > Using the month variable, rewrite this pattern in such a way that it matches the date in the format 13 JUN 1992 (two digits, one whitespace, a month abbreviation, one whitespace, four digits).
 
+- #### Solution
 ```Kotlin
 val month = "(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)"
 
@@ -136,6 +141,7 @@ public void sendMessageToClient(
 }
 ```
 
+- #### Solution
 ```Kotlin
 fun sendMessageToClient(
         client: Client?, message: String?, mailer: Mailer
@@ -161,6 +167,7 @@ interface Mailer {
 > Nothing type can be used as a return type for a function that always throws an exception. When you call such a function, the compiler uses the information that the execution doesn't continue beyond the function.
 Specify Nothing return type for the failWithWrongAge function. Note that without the Nothing type, the checkAge function doesn't compile because the compiler assumes the age can be null.
 
+- #### Solution
 ```Kotlin
 import java.lang.IllegalArgumentException
 
@@ -184,6 +191,7 @@ fun main() {
 > Kotlin supports functional programming. Learn about lambdas in Kotlin.
 Pass a lambda to the any function to check if the collection contains an even number. The any function gets a predicate as an argument and returns true if at least one element satisfies the predicate.
 
+- #### Solution
 ```Kotlin
 fun containsEven(collection: Collection<Int>): Boolean =
         collection.any { it -> it % 2 == 0 }
