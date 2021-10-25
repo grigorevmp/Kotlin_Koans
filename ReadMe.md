@@ -2,6 +2,8 @@
 Solution for Kotlin koans
 ### Last update: 25.10.2021
 
+[Kotlin koans]([https://link](https://play.kotlinlang.org/koans))
+
 ## Links
 
 ### Introduction
@@ -21,6 +23,12 @@ Solution for Kotlin koans
 * [Rename on import](#rename-on-import) 
 * [Extension functions](#extension-functions) 
 
+### Conventions
+* [Comparison](#comparison) 
+* [Ranges](#ranges) 
+* [For loop](#for-loop) 
+* [Operators overloading](#operators-overloading) 
+* [Invoke](#Invoke) 
 
 ## Introduction
 
@@ -339,3 +347,93 @@ fun Pair<Int, Int>.r(): RationalNumber = RationalNumber(this.component1(), this.
 data class RationalNumber(val numerator: Int, val denominator: Int)
 ```
 
+## Conventions
+
+### Comparison
+ 
+> Learn about operator overloading and how the different conventions for operations like ==, <, + work in Kotlin. Add the function compareTo to the class MyDate to make it comparable. After this, the code below date1 < date2 should start to compile.
+Note that when you override a member in Kotlin, the override modifier is mandatory.
+
+- #### Solution
+```Kotlin
+data class MyDate(val year: Int, val month: Int, val dayOfMonth: Int) : Comparable<MyDate> {
+     override operator fun compareTo(other:MyDate):Int{
+      if(this.year < other.year){
+          return -1
+      } else if(this.year > other.year){
+          return 1
+      }
+      if(this.month < other.month){
+          return -1
+      } else if(this.month > other.month){
+          return 1
+      }
+      if(this.dayOfMonth < other.dayOfMonth){
+          return -1
+      } else if(this.dayOfMonth > other.dayOfMonth){
+          return 1
+      } else
+        return 0
+    }
+}
+
+fun test(date1: MyDate, date2: MyDate) {
+    // this code should compile:
+    println(date1 < date2)
+}
+```
+
+### Ranges
+ 
+> sing ranges implement a function that checks whether the date is in the range between the first date and the last date (inclusive).
+
+> You can build a range of any comparable elements. In Kotlin in checks are translated to the corresponding contains calls and .. to rangeTo calls:
+
+```Kotlin
+val list = listOf("a", "b")
+"a" in list  // list.contains("a")
+"a" !in list // !list.contains("a")
+
+date1..date2 // date1.rangeTo(date2)
+```
+
+- #### Solution
+```Kotlin
+fun checkInRange(date: MyDate, first: MyDate, last: MyDate): Boolean {
+    return date in first..last
+}
+```
+
+### For loop
+ 
+> A Kotlin for loop can iterate through any object if the corresponding iterator member or extension function is available.
+
+> Make the class DateRange implement Iterable<MyDate>, so that it can be iterated over. Use the function MyDate.followingDate() defined in DateUtil.kt; you don't have to implement the logic for finding the following date on your own.
+
+> Use an object expression which plays the same role in Kotlin as an anonymous class in Java.
+
+- #### Solution
+```Kotlin
+class DateRange(val start: MyDate, val end: MyDate): Iterable<MyDate>{
+    override fun iterator(): Iterator<MyDate>{
+       return object : Iterator<MyDate> {
+            var current_date: MyDate = start
+
+            override fun next(): MyDate {
+                if (!hasNext()) throw NoSuchElementException()
+                val result = current_date
+                current_date = current_date.followingDate()
+                return result
+            }
+
+            override fun hasNext(): Boolean = current_date <= end
+        }
+    }
+}
+
+fun iterateOverDateRange(firstDate: MyDate, secondDate: MyDate, handler: (MyDate) -> Unit) {
+    for (date in firstDate..secondDate) {
+        handler(date)
+    }
+}
+```
