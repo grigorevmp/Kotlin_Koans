@@ -783,75 +783,68 @@ fun getMostExpensiveProductBy(customer: Customer): Product? =
         }.maxByOrNull{
             it.price
         }
-        
+```
+
 ### Sum
  
-> Objects with the invoke() method can be invoked as a function.
-You can add an invoke extension for any class, but it's better not to overuse it:
+> Implement a function that calculates the total amount of money the customer has spent: the sum of the prices for all the products ordered by a given customer. Note that each product should be counted as many times as it was ordered.
+Use sum on a collection of numbers or sumOf to convert the elements to numbers first and then sum them up.
 
 ```Kotlin
-operator fun Int.invoke() { println(this) }
-​
-1() //huh?..
+listOf(1, 5, 3).sum() == 9
+listOf("a", "b", "cc").sumOf { it.length } == 4
 ```
 
 > Implement the function Invokable.invoke() to count the number of times it is invoked.
 
 - #### Solution
 ```Kotlin
-class Invokable {
-    var numberOfInvocations: Int = 0
-        private set
-
-    operator fun invoke(): Invokable {
-        numberOfInvocations += 1
-        return this
-    }
-}
-
-fun invokeTwice(invokable: Invokable) = invokable()()
+fun moneySpentBy(customer: Customer): Double =
+        customer.orders.flatMap {
+            it.products
+        }.sumOf{
+            it.price
+        }
 ```
-* [Fold](#Invoke) 
-### Invoke
+
+### Fold
  
-> Objects with the invoke() method can be invoked as a function.
-You can add an invoke extension for any class, but it's better not to overuse it:
+> Learn about fold and reduce and implement a function that returns the set of products that all the customers ordered using fold.
+You can use the Customer.getOrderedProducts() defined in the previous task (copy its implementation).
 
 ```Kotlin
-operator fun Int.invoke() { println(this) }
-​
-1() //huh?..
+listOf(1, 2, 3, 4)
+    .fold(1) { partProduct, element ->
+        element * partProduct
+    } == 24
 ```
-
-> Implement the function Invokable.invoke() to count the number of times it is invoked.
 
 - #### Solution
 ```Kotlin
-class Invokable {
-    var numberOfInvocations: Int = 0
-        private set
-
-    operator fun invoke(): Invokable {
-        numberOfInvocations += 1
-        return this
+// Return the set of products that were ordered by all customers
+fun Shop.getProductsOrderedByAll(): Set<Product> {
+    val allProducts = customers.flatMap {
+        it.getOrderedProducts() 
+    }.toSet()
+    
+    return customers.fold(allProducts) { orderedByAll, customer ->
+        orderedByAll.intersect(customer.getOrderedProducts())
     }
 }
 
-fun invokeTwice(invokable: Invokable) = invokable()()
+fun Customer.getOrderedProducts(): List<Product> =
+        this.orders.flatMap {
+            it.products
+        }
 ```
-* [Compound tasks](#Invoke) 
-### Invoke
+
+### Compound tasks
  
-> Objects with the invoke() method can be invoked as a function.
-You can add an invoke extension for any class, but it's better not to overuse it:
-
-```Kotlin
-operator fun Int.invoke() { println(this) }
-​
-1() //huh?..
-```
-
-> Implement the function Invokable.invoke() to count the number of times it is invoked.
+> Implement two functions:
+The first one should find the most expensive product among all the delivered products ordered by the customer. Use Order.isDelivered flag
+The second one should count the number of times a product was ordered. Note that a customer may order the same product several times
+Use the functions from the Kotlin standard library that were previously discussed.
+You can use the Customer.getOrderedProducts() function defined in the previous task (copy its implementation).
 
 - #### Solution
 ```Kotlin
