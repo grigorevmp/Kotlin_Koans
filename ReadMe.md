@@ -1,6 +1,6 @@
 # Kotlin Koans
 Solution for Kotlin koans
-### Last update: 25.10.2021
+### Last update: 26.10.2021
 
 [Kotlin koans]([https://link](https://play.kotlinlang.org/koans))
 
@@ -29,6 +29,22 @@ Solution for Kotlin koans
 * [For loop](#for-loop) 
 * [Operators overloading](#operators-overloading) 
 * [Invoke](#Invoke) 
+
+### Collections
+* [Introduction](#introduction) 
+* [Sort](#sort) 
+* [Filter map](#filter-map) 
+* [All Any and other predicates](#all-any-and-other-predicates) 
+* [Associate](#associate) 
+* [GroupBy](#groupby) 
+* [Partition](#partition) 
+* [FlatMap](#flatMap) 
+* [Max min](#max-min) 
+* [Sum](#sum) 
+* [Fold](#fold) 
+* [Compound tasks](#compound-tasks) 
+* [Sequences](#sequences) 
+* [Getting used to new style](#getting-used-to-new-style) 
 
 ## Introduction
 
@@ -436,4 +452,474 @@ fun iterateOverDateRange(firstDate: MyDate, secondDate: MyDate, handler: (MyDate
         handler(date)
     }
 }
+```
+
+
+### Operators overloading
+ 
+> Implement date arithmetic and support adding years, weeks, and days to a date. You could write the code like this: date + YEAR * 2 + WEEK * 3 + DAY * 15.
+
+> First, add the extension function plus() to MyDate, taking the TimeInterval as an argument. Use the utility function MyDate.addTimeIntervals() declared in DateUtil.kt
+
+> Then, try to support adding several time intervals to a date. You may need an extra class.
+
+- #### Solution
+```Kotlin
+import TimeInterval.*
+
+data class MyDate(val year: Int, val month: Int, val dayOfMonth: Int)
+
+// Supported intervals that might be added to dates:
+enum class TimeInterval { DAY, WEEK, YEAR }
+
+data class CompositeTimeInterval(val timeInterval: TimeInterval, val amount: Int)
+
+operator fun TimeInterval.times(amount: Int): CompositeTimeInterval = CompositeTimeInterval(this, amount)
+
+operator fun MyDate.plus(timeInterval: TimeInterval): MyDate = this.addTimeIntervals(timeInterval, 1)
+
+operator fun MyDate.plus(compositeTimeInterval: CompositeTimeInterval): MyDate = this.addTimeIntervals(compositeTimeInterval.timeInterval, compositeTimeInterval.amount)
+
+fun task1(today: MyDate): MyDate {
+    return today + YEAR + WEEK
+}
+
+fun task2(today: MyDate): MyDate {
+    return today + YEAR * 2 + WEEK * 3 + DAY * 5
+}
+```
+
+### Invoke
+ 
+> Objects with the invoke() method can be invoked as a function.
+You can add an invoke extension for any class, but it's better not to overuse it:
+
+```Kotlin
+operator fun Int.invoke() { println(this) }
+​
+1() //huh?..
+```
+
+> Implement the function Invokable.invoke() to count the number of times it is invoked.
+
+- #### Solution
+```Kotlin
+class Invokable {
+    var numberOfInvocations: Int = 0
+        private set
+
+    operator fun invoke(): Invokable {
+        numberOfInvocations += 1
+        return this
+    }
+}
+
+fun invokeTwice(invokable: Invokable) = invokable()()
+```
+
+## Collections
+
+### Introduction
+ 
+> This section was inspired by GS Collections Kata.
+Kotlin can be easily mixed with Java code. Default collections in Kotlin are all Java collections under the hood. Learn about read-only and mutable views on Java collections.
+The Kotlin standard library contains lots of extension functions that make working with collections more convenient. For example, operations that transform a collection into another one, starting with 'to': toSet or toList.
+Implement the extension function Shop.getSetOfCustomers(). The class Shop and all related classes can be found in Shop.kt.
+
+- #### Solution
+```Kotlin
+fun Shop.getSetOfCustomers(): Set<Customer> =
+     this.customers.toSet()
+```
+
+### Sort
+ 
+> Learn about collection ordering and the the difference between operations in-place on mutable collections and operations returning new collections.
+Implement a function for returning the list of customers, sorted in descending order by the number of orders they have made. Use sortedDescending or sortedByDescending.
+
+```Kotlin
+val strings = listOf("bbb", "a", "cc")
+strings.sorted() ==
+        listOf("a", "bbb", "cc")
+
+strings.sortedBy { it.length } ==
+        listOf("a", "cc", "bbb")
+
+strings.sortedDescending() ==
+        listOf("cc", "bbb", "a")
+
+strings.sortedByDescending { it.length } ==
+        listOf("bbb", "cc", "a")
+```
+
+- #### Solution
+```Kotlin
+// Return a list of customers, sorted in the descending by number of orders they have made
+fun Shop.getCustomersSortedByOrders(): List<Customer> =
+        this.customers.sortedByDescending{
+            it.orders.size
+        }
+```
+
+### Filter map
+ 
+> Learn about mapping and filtering a collection.
+Implement the following extension functions using the map and filter functions:
+Find all the different cities the customers are from
+Find the customers living in a given city
+
+```Kotlin
+val numbers = listOf(1, -1, 2)
+numbers.filter { it > 0 } == listOf(1, 2)
+numbers.map { it * it } == listOf(1, 1, 4)
+```
+
+- #### Solution
+```Kotlin
+// Find all the different cities the customers are from
+fun Shop.getCustomerCities(): Set<City> =
+        this.customers.map { 
+            it.city 
+        }.toSet()
+
+// Find the customers living in a given city
+fun Shop.getCustomersFrom(city: City): List<Customer> =
+        this.customers.filter { 
+            it.city == city 
+        }
+```
+
+### All Any and other predicates
+ 
+> Learn about testing predicates and retrieving elements by condition.
+Implement the following functions using all, any, count, find:
+
+> - checkAllCustomersAreFrom should return true if all customers are from a given city
+> - hasCustomerFrom should check if there is at least one customer from a given city
+> - countCustomersFrom should return the number of customers from a given city
+> - findCustomerFrom should return a customer who lives in a given city, or null if there is none
+
+```Kotlin
+val numbers = listOf(-1, 0, 2)
+val isZero: (Int) -> Boolean = { it == 0 }
+numbers.any(isZero) == true
+numbers.all(isZero) == false
+numbers.count(isZero) == 1
+numbers.find { it > 0 } == 2
+```
+
+- #### Solution
+```Kotlin
+// Return true if all customers are from a given city
+fun Shop.checkAllCustomersAreFrom(city: City): Boolean =
+        this.customers.all{
+            it.city == city
+        }
+
+// Return true if there is at least one customer from a given city
+fun Shop.hasCustomerFrom(city: City): Boolean =
+        this.customers.any{
+            it.city == city
+        }
+
+// Return the number of customers from a given city
+fun Shop.countCustomersFrom(city: City): Int =
+        this.customers.count{
+            it.city == city
+        }
+
+// Return a customer who lives in a given city, or null if there is none
+fun Shop.findCustomerFrom(city: City): Customer? =
+        this.customers.find{
+            it.city == city
+        }
+```
+
+### Associate
+ 
+> Learn about association. Implement the following functions using associateBy, associateWith, and associate:
+Build a map from the customer name to the customer
+Build a map from the customer to their city
+Build a map from the customer name to their city
+
+```Kotlin
+val list = listOf("abc", "cdef")
+
+list.associateBy { it.first() } == 
+        mapOf('a' to "abc", 'c' to "cdef")
+
+list.associateWith { it.length } == 
+        mapOf("abc" to 3, "cdef" to 4)
+
+list.associate { it.first() to it.length } == 
+        mapOf('a' to 3, 'c' to 4)
+```
+
+- #### Solution
+```Kotlin
+// Build a map from the customer name to the customer
+fun Shop.nameToCustomerMap(): Map<String, Customer> =
+        this.customers.associateBy {
+            it.name
+        }
+
+// Build a map from the customer to their city
+fun Shop.customerToCityMap(): Map<Customer, City> =
+        this.customers.associateWith {
+            it.city
+        }
+
+// Build a map from the customer name to their city
+fun Shop.customerNameToCityMap(): Map<String, City> =
+        this.customers.associate {
+            it.name to it.city
+        }
+```
+
+### GroupBy
+ 
+> Learn about grouping. Use groupBy to implement the function to build a map that stores the customers living in a given city.
+
+```Kotlin
+val result = 
+    listOf("a", "b", "ba", "ccc", "ad")
+        .groupBy { it.length }
+
+result == mapOf(
+    1 to listOf("a", "b"),
+    2 to listOf("ba", "ad"),
+    3 to listOf("ccc"))
+```
+
+- #### Solution
+```Kotlin
+// Build a map that stores the customers living in a given city
+fun Shop.groupCustomersByCity(): Map<City, List<Customer>> =
+        this.customers.groupBy{
+            it.city
+        }
+```
+
+### Partition
+ 
+> Learn about partitioning and the destructuring declaration syntax that is often used together with partition.
+Then implement a function for returning customers who have more undelivered orders than delivered orders using partition.
+
+```Kotlin
+val numbers = listOf(1, 3, -4, 2, -11)
+val (positive, negative) =
+    numbers.partition { it > 0 }
+
+positive == listOf(1, 3, 2)
+negative == listOf(-4, -11)
+```
+
+- #### Solution
+```Kotlin
+// Return customers who have more undelivered orders than delivered
+fun Shop.getCustomersWithMoreUndeliveredOrders(): Set<Customer> = 
+    this.customers.filter {
+        val (delivered, undelivered) = it.orders.partition { it.isDelivered }
+        undelivered.size > delivered.size
+    }.toSet()
+```
+
+### FlatMap
+ 
+> Learn about flattening and implement two functions using flatMap:
+
+> - The first should return all products the given customer has ordered
+> - The second should return all products that at least one customer ordered
+
+```Kotlin
+val result = listOf("abc", "12")
+    .flatMap { it.toList() }
+
+result == listOf('a', 'b', 'c', '1', '2')
+```
+
+- #### Solution
+```Kotlin
+// Return all products the given customer has ordered
+fun Customer.getOrderedProducts(): List<Product> =
+        this.orders.flatMap {
+            it.products
+        }
+
+// Return all products that were ordered by at least one customer
+fun Shop.getOrderedProducts(): Set<Product> =
+        this.customers.flatMap{
+            it.getOrderedProducts()
+        }.toSet()
+```
+
+### Max min
+ 
+> Learn about collection aggregate operations.
+Implement two functions:
+The first should return the customer who has placed the most amount of orders in this shop
+The second should return the most expensive product that the given customer has ordered
+The functions maxOrNull, minOrNull, maxByOrNull, and minByOrNull might be helpful.
+
+```Kotlin
+listOf(1, 42, 4).maxOrNull() == 42
+listOf("a", "ab").minByOrNull(String::length) == "a"
+```
+
+> You can use callable references instead of lambdas. It can be especially helpful in call chains, where it occurs in different lambdas and has different types. Implement the getMostExpensiveProductBy function using callable references.
+
+- #### Solution
+```Kotlin
+// Return a customer who has placed the maximum amount of orders
+fun Shop.getCustomerWithMaxOrders(): Customer? =
+        this.customers.maxByOrNull{
+            it.orders.size
+        }
+
+// Return the most expensive product that has been ordered by the given customer
+fun getMostExpensiveProductBy(customer: Customer): Product? =
+        customer.orders.flatMap {
+            it.products
+        }.maxByOrNull{
+            it.price
+        }
+        
+### Sum
+ 
+> Objects with the invoke() method can be invoked as a function.
+You can add an invoke extension for any class, but it's better not to overuse it:
+
+```Kotlin
+operator fun Int.invoke() { println(this) }
+​
+1() //huh?..
+```
+
+> Implement the function Invokable.invoke() to count the number of times it is invoked.
+
+- #### Solution
+```Kotlin
+class Invokable {
+    var numberOfInvocations: Int = 0
+        private set
+
+    operator fun invoke(): Invokable {
+        numberOfInvocations += 1
+        return this
+    }
+}
+
+fun invokeTwice(invokable: Invokable) = invokable()()
+```
+* [Fold](#Invoke) 
+### Invoke
+ 
+> Objects with the invoke() method can be invoked as a function.
+You can add an invoke extension for any class, but it's better not to overuse it:
+
+```Kotlin
+operator fun Int.invoke() { println(this) }
+​
+1() //huh?..
+```
+
+> Implement the function Invokable.invoke() to count the number of times it is invoked.
+
+- #### Solution
+```Kotlin
+class Invokable {
+    var numberOfInvocations: Int = 0
+        private set
+
+    operator fun invoke(): Invokable {
+        numberOfInvocations += 1
+        return this
+    }
+}
+
+fun invokeTwice(invokable: Invokable) = invokable()()
+```
+* [Compound tasks](#Invoke) 
+### Invoke
+ 
+> Objects with the invoke() method can be invoked as a function.
+You can add an invoke extension for any class, but it's better not to overuse it:
+
+```Kotlin
+operator fun Int.invoke() { println(this) }
+​
+1() //huh?..
+```
+
+> Implement the function Invokable.invoke() to count the number of times it is invoked.
+
+- #### Solution
+```Kotlin
+class Invokable {
+    var numberOfInvocations: Int = 0
+        private set
+
+    operator fun invoke(): Invokable {
+        numberOfInvocations += 1
+        return this
+    }
+}
+
+fun invokeTwice(invokable: Invokable) = invokable()()
+```
+* [Sequences](#Invoke) 
+### Invoke
+ 
+> Objects with the invoke() method can be invoked as a function.
+You can add an invoke extension for any class, but it's better not to overuse it:
+
+```Kotlin
+operator fun Int.invoke() { println(this) }
+​
+1() //huh?..
+```
+
+> Implement the function Invokable.invoke() to count the number of times it is invoked.
+
+- #### Solution
+```Kotlin
+class Invokable {
+    var numberOfInvocations: Int = 0
+        private set
+
+    operator fun invoke(): Invokable {
+        numberOfInvocations += 1
+        return this
+    }
+}
+
+fun invokeTwice(invokable: Invokable) = invokable()()
+```
+* [Getting used to new style](#Invoke) 
+### Invoke
+ 
+> Objects with the invoke() method can be invoked as a function.
+You can add an invoke extension for any class, but it's better not to overuse it:
+
+```Kotlin
+operator fun Int.invoke() { println(this) }
+​
+1() //huh?..
+```
+
+> Implement the function Invokable.invoke() to count the number of times it is invoked.
+
+- #### Solution
+```Kotlin
+class Invokable {
+    var numberOfInvocations: Int = 0
+        private set
+
+    operator fun invoke(): Invokable {
+        numberOfInvocations += 1
+        return this
+    }
+}
+
+fun invokeTwice(invokable: Invokable) = invokable()()
 ```
