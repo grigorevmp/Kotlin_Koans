@@ -841,78 +841,132 @@ fun Customer.getOrderedProducts(): List<Product> =
 ### Compound tasks
  
 > Implement two functions:
-The first one should find the most expensive product among all the delivered products ordered by the customer. Use Order.isDelivered flag
-The second one should count the number of times a product was ordered. Note that a customer may order the same product several times
+
+> The first one should find the most expensive product among all the delivered products ordered by the customer. Use Order.isDelivered flag
+
+> The second one should count the number of times a product was ordered. Note that a customer may order the same product several times
 Use the functions from the Kotlin standard library that were previously discussed.
 You can use the Customer.getOrderedProducts() function defined in the previous task (copy its implementation).
 
 - #### Solution
 ```Kotlin
-class Invokable {
-    var numberOfInvocations: Int = 0
-        private set
+// Find the most expensive product among all the delivered products
+// ordered by the customer. Use `Order.isDelivered` flag. 
+fun findMostExpensiveProductBy(customer: Customer): Product? {
+   return customer.orders.filter{
+       it.isDelivered
+   }.flatMap{
+       it.products
+   }.maxByOrNull{
+       it.price
+   }
+}
 
-    operator fun invoke(): Invokable {
-        numberOfInvocations += 1
-        return this
+// Count the amount of times a product was ordered.
+// Note that a customer may order the same product several times.
+fun Shop.getNumberOfTimesProductWasOrdered(product: Product): Int {
+    return customers.flatMap { 
+        it.orders.flatMap { 
+            it.products 
+        }
+    }.count{
+        it == product
     }
 }
 
-fun invokeTwice(invokable: Invokable) = invokable()()
+fun Customer.getOrderedProducts(): List<Product> =
+        this.orders.flatMap {
+            it.products
+        }
 ```
-* [Sequences](#Invoke) 
-### Invoke
+
+### Sequences
  
-> Objects with the invoke() method can be invoked as a function.
-You can add an invoke extension for any class, but it's better not to overuse it:
-
-```Kotlin
-operator fun Int.invoke() { println(this) }
-​
-1() //huh?..
-```
-
-> Implement the function Invokable.invoke() to count the number of times it is invoked.
+> Learn about sequences, they allow you to perform operations lazily rather than eagerly.
+Copy the implementation from the previous task and modify it in a way that the operations on sequences are used.
 
 - #### Solution
 ```Kotlin
-class Invokable {
-    var numberOfInvocations: Int = 0
-        private set
+// Find the most expensive product among all the delivered products
+// ordered by the customer. Use `Order.isDelivered` flag.
+// Find the most expensive product among all the delivered products
+// ordered by the customer. Use `Order.isDelivered` flag. 
+fun findMostExpensiveProductBy(customer: Customer): Product? {
+   return customer.orders.asSequence().filter{
+       it.isDelivered
+   }.flatMap{
+       it.products
+   }.maxByOrNull{
+       it.price
+   }
+}
 
-    operator fun invoke(): Invokable {
-        numberOfInvocations += 1
-        return this
+// Count the amount of times a product was ordered.
+// Note that a customer may order the same product several times.
+fun Shop.getNumberOfTimesProductWasOrdered(product: Product): Int {
+    return customers.asSequence().flatMap { 
+        it.orders.flatMap { 
+            it.products 
+        }
+    }.count{
+        it == product
     }
 }
 
-fun invokeTwice(invokable: Invokable) = invokable()()
+fun Customer.getOrderedProducts(): List<Product> =
+        this.orders.flatMap {
+            it.products
+        }
 ```
-* [Getting used to new style](#Invoke) 
-### Invoke
+
+### Getting used to new style
  
-> Objects with the invoke() method can be invoked as a function.
-You can add an invoke extension for any class, but it's better not to overuse it:
+> We can rewrite and simplify the following code using lambdas and operations on collections. Fill in the gaps in doSomethingWithCollection, the simplified version of the doSomethingWithCollectionOldStyle function, so that its behavior stays the same and isn't modified in any way.
 
 ```Kotlin
-operator fun Int.invoke() { println(this) }
-​
-1() //huh?..
-```
+fun doSomethingWithCollectionOldStyle(
+    collection: Collection<String>
+): Collection<String>? {
+    val groupsByLength = mutableMapOf<Int, MutableList<String>>()
+    for (s in collection) {
+        var strings: MutableList<String>? = groupsByLength[s.length]
+        if (strings == null) {
+            strings = mutableListOf()
+            groupsByLength[s.length] = strings
+        }
+        strings.add(s)
+    }
 
-> Implement the function Invokable.invoke() to count the number of times it is invoked.
+    var maximumSizeOfGroup = 0
+    for (group in groupsByLength.values) {
+        if (group.size > maximumSizeOfGroup) {
+            maximumSizeOfGroup = group.size
+        }
+    }
+
+    for (group in groupsByLength.values) {
+        if (group.size == maximumSizeOfGroup) {
+            return group
+        }
+    }
+    return null
+}
+```
 
 - #### Solution
 ```Kotlin
-class Invokable {
-    var numberOfInvocations: Int = 0
-        private set
+fun doSomethingWithCollection(collection: Collection<String>): Collection<String>? {
 
-    operator fun invoke(): Invokable {
-        numberOfInvocations += 1
-        return this
+    val groupsByLength = collection.groupBy {
+        s -> s.length
+    }
+
+    val maximumSizeOfGroup = groupsByLength.values.map { 
+        group -> group.size 
+    }.maxOrNull()
+
+    return groupsByLength.values.firstOrNull { 
+        group -> group.size == maximumSizeOfGroup 
     }
 }
-
-fun invokeTwice(invokable: Invokable) = invokable()()
 ```
