@@ -52,6 +52,13 @@ Solution for Kotlin koans
 * [Delegates examples](#delegates-examples) 
 * [Delegates how it works](#delegates-how-it-works) 
   
+### Builders
+* [Function literals with receiver](#function-literals-with-receiver) 
+* [String and map builders](#string-and-map-builders) 
+* [The function apply](#the-function-apply) 
+* [Html builders](#html-builders) 
+* [Builders how it works](#builders-how-it-works) 
+* [Builders implementation](#builders-implementation) 
 
 ## Introduction
 
@@ -1059,5 +1066,209 @@ class EffectiveDate<R> : ReadWriteProperty<R, MyDate> {
     override fun setValue(thisRef: R, property: KProperty<*>, value: MyDate) {
         timeInMillis = value.toMillis()
     }
+}
+```
+
+## Builders
+
+
+### Function literals with receiver
+ 
+> Learn about function literals with receiver.
+You can declare isEven and isOdd as values that can be called as extension functions. Complete the declarations in the code.
+
+- #### Solution
+```Kotlin
+fun task(): List<Boolean> {
+    val isEven: Int.() -> Boolean = { this % 2 == 0}
+    val isOdd: Int.() -> Boolean = { this % 2 == 1}
+
+    return listOf(42.isOdd(), 239.isOdd(), 294823098.isEven())
+}
+```
+
+### String and map builders
+ 
+> Function literals with receiver are very useful for creating builders, for example:
+
+```Kotlin
+fun buildString(build: StringBuilder.() -> Unit): String {
+    val stringBuilder = StringBuilder()
+    stringBuilder.build()
+    return stringBuilder.toString()
+}
+
+val s = buildString {
+    this.append("Numbers: ")
+    for (i in 1..3) {
+        // 'this' can be omitted
+        append(i)
+    }
+}
+
+s == "Numbers: 123"
+```
+
+> Implement the function buildMutableMap that takes a parameter (of extension function type), creates a new HashMap, builds it, and returns it as a result. Note that starting from 1.3.70, the standard library has a similiar buildMap function.
+
+- #### Solution
+```Kotlin
+import java.util.HashMap
+
+fun <K, V> buildMutableMap(build: HashMap<K, V>.() -> Unit): Map<K, V> {
+    val map = HashMap<K, V>()
+    map.build()
+    return map
+}
+
+fun usage(): Map<Int, String> {
+    return buildMutableMap {
+        put(0, "0")
+        for (i in 1..10) {
+            put(i, "$i")
+        }
+    }
+}
+```
+
+### The function apply
+ 
+> The previous examples can be rewritten using the library function apply. Write your implementation of this function named myApply.
+Learn about the other scope functions and how to use them.
+
+- #### Solution
+```Kotlin
+fun <T> T.myApply(f: T.() -> Unit): T {
+    f()
+    return this
+}
+
+fun createString(): String {
+    return StringBuilder().myApply {
+        append("Numbers: ")
+        for (i in 1..10) {
+            append(i)
+        }
+    }.toString()
+}
+
+fun createMap(): Map<Int, String> {
+    return hashMapOf<Int, String>().myApply {
+        put(0, "0")
+        for (i in 1..10) {
+            put(i, "$i")
+        }
+    }
+}
+```
+
+### Html builders
+ 
+> Fill the table with proper values from the product list. The products are declared in data.kt.
+
+> Color the table like a chessboard. Use the getTitleColor() and getCellColor() functions. Pass a color as an argument to the functions tr, td.
+
+> Run the main function defined in the file demo.kt to see the rendered table.
+
+- #### Solution
+```Kotlin
+fun renderProductTable(): String {
+    return html {
+        table {
+            tr(color = getTitleColor()) {
+                td {
+                    text("Product")
+                }
+                td {
+                    text("Price")
+                }
+                td {
+                    text("Popularity")
+                }
+            }
+            val products = getProducts()
+            for ((index, product) in products.withIndex()) {
+                tr {
+                    td(color = getCellColor(index, 0)) {
+                        text(product.description)
+                    }
+                    td(color = getCellColor(index, 1)) {
+                        text(product.price)
+                    }
+                    td(color = getCellColor(index, 2)) {
+                        text(product.popularity)
+                    }
+                }
+            }
+        }
+    }.toString()
+}
+
+fun getTitleColor() = "#b9c9fe"
+fun getCellColor(index: Int, column: Int) = if ((index + column) % 2 == 0) "#dce4ff" else "#eff2ff"
+```
+
+### Builders how it works
+
+- #### Solution
+```Kotlin
+import Answer.*
+
+enum class Answer { a, b, c }
+
+val answers = mapOf<Int, Answer?>(
+        1 to c, 2 to b, 3 to b, 4 to c
+)
+```
+
+### Builders implementation
+ 
+> Complete the implementation of a simplified DSL for HTML. Implement tr and td functions.
+Learn more about type-safe builders.
+
+- #### Solution
+```Kotlin
+open class Tag(val name: String) {
+    protected val children = mutableListOf<Tag>()
+
+    override fun toString() =
+            "<$name>${children.joinToString("")}</$name>"
+}
+
+fun table(init: TABLE.() -> Unit): TABLE {
+    val table = TABLE()
+    table.init()
+    return table
+}
+
+class TABLE : Tag("table") {
+    fun tr(init: TR.() -> Unit) {
+        val tr = TR()
+        tr.init()
+        children += tr
+    }
+}
+
+class TR : Tag("tr") {
+    fun td(init: TD.() -> Unit) {
+        children += TD().apply(init)
+    }
+}
+
+class TD : Tag("td")
+
+fun createTable() =
+        table {
+            tr {
+                repeat(2) {
+                    td {
+                    }
+                }
+            }
+        }
+
+fun main() {
+    println(createTable())
+    //<table><tr><td></td><td></td></tr></table>
 }
 ```
